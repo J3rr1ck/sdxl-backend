@@ -11,7 +11,7 @@ def torch_device():
 
 
 def pipeline(
-    model="stabilityai/stable-diffusion-xl-base-0.9",
+    model="stabilityai/stable-diffusion-xl-base-1.0",
     device=torch_device(),
     watermark=False,
     low_vram=False,
