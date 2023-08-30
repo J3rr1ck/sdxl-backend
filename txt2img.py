@@ -33,10 +33,10 @@ def main():
     low_vram = args.lowvram
 
     base_pipe = pipeline(
-        model="stabilityai/stable-diffusion-xl-base-0.9", low_vram=low_vram
+        model="stabilityai/stable-diffusion-xl-base-1.0", low_vram=low_vram
     )
     refiner_pipe = pipeline(
-        model="stabilityai/stable-diffusion-xl-refiner-0.9", low_vram=low_vram
+        model="stabilityai/stable-diffusion-xl-refiner-1.0", low_vram=low_vram
     )
 
     images = base_pipe(prompt=prompt, output_type="latent").images
