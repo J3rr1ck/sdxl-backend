@@ -1,6 +1,6 @@
 import torch
 from diffusers import DiffusionPipeline
-
+import platform
 
 def torch_device():
     if torch.cuda.is_available():
@@ -9,9 +9,8 @@ def torch_device():
         return "mps"
     return "cpu"
 
-
 def pipeline(
-    model="stabilityai/stable-diffusion-xl-base-0.9",
+    model="stabilityai/stable-diffusion-xl-base-1.0",
     device=torch_device(),
     watermark=False,
     low_vram=False,
@@ -32,28 +31,24 @@ def pipeline(
 
     # enable VAE titling and slicing if low VRAM
     if low_vram:
-        # https://huggingface.co/docs/diffusers/optimization/fp16#tiled-vae-decode-and-encode-for-large-images
         pipe.enable_vae_tiling()
-        # https://huggingface.co/docs/diffusers/optimization/fp16#sliced-vae-decode-for-larger-batches
         pipe.enable_vae_slicing()
 
-    # model offloading to save memory:
-    # https://huggingface.co/docs/diffusers/optimization/fp16#model_offloading
+    # model offloading to save memory
     if low_vram and device == "cuda":
         pipe.enable_model_cpu_offload()
     else:
         pipe.to(device)
 
-    # 20-30% inference speed up for torch >= 2.0
-    pipe.unit = torch.compile(pipe.unet, mode="reduce-overhead", fullgraph=True)
+    # Apply torch.compile only if OS is not Windows
+    if platform.system() != "Windows":
+        pipe.unit = torch.compile(pipe.unet, mode="reduce-overhead", fullgraph=True)
 
-    # mock out watermark, as it introduces undesirable pixels:
-    # https://github.com/huggingface/diffusers/issues/4014
+    # mock out watermark if needed
     if not watermark:
         pipe.watermark = NoWatermark()
 
     return pipe
-
 
 class NoWatermark:
     def apply_watermark(self, img):
